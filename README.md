@@ -1,6 +1,12 @@
-# Wen Bot
+<p align="center">
+  <a href="https://codesandbox.io">
+    <img src="https://i.ibb.co/HzWzkR6/Frame-1261152820-1.png" height="470px">
+  </a>
+</p>
 
-Wen Bot is a Node.js based automation bot designed to interact with the Ethereum blockchain to claim yields and gas fees for the Wen Trade Pool and Wen Gas Station smart contracts. It leverages the Alchemy Web3 API for blockchain interactions and integrates with Telegram for notifications.
+# Wen Bot 🤖
+
+Wen Bot is a Node.js based automation bot designed to interact with the Blast blockchain to claim yields and gas fees for the Wen Trade Pool and Wen Gas Station smart contracts.
 
 ## Features
 
@@ -13,14 +19,14 @@ Wen Bot is a Node.js based automation bot designed to interact with the Ethereum
 
 Before running Wen Bot, you need to configure the following environment variables in a `.env` file:
 
-- `TESTNET_RPC_URL`: The RPC URL of the Ethereum Testnet.
+- `TESTNET_RPC_URL`: The RPC URL of the Blast Testnet.
 - `PRIVATE_KEY`: The private key of the wallet used for transactions.
 - `TELEGRAM_BOT_TOKEN`: The token for the Telegram bot.
 - `TELEGRAM_CHAT_ID`: The chat ID of the Telegram channel where notifications will be sent.
 
 ## Dependencies
 
-- `@alch/alchemy-web3`: Alchemy Web3 is used for enhanced Ethereum blockchain interactions.
+- `@alch/alchemy-web3`: Alchemy Web3 is used for enhanced Blast blockchain interactions.
 - `dotenv`: Manages environment variables.
 - `node-cron`: Used for scheduling tasks.
 - `node-telegram-bot-api`: Enables Telegram bot functionalities.
