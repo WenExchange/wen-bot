@@ -10,7 +10,7 @@ const wallet = web3.eth.accounts.wallet.add(process.env.PRIVATE_KEY);
 
 // [ Testnet Contract Addresses ]
 // Wen Trade Pool
-const WenTradePoolAddress = "0xE4e5f726677A159B69e0159f464693E430227811";
+const WenTradePoolAddress = "0x2d8c05bc2669C4f33B140871b4171f0555DE0E86";
 // Gas station
 const WenGasStationAddress = "0xE1178f7eD637e70B551596e48c651CAF3394c247";
 var WenGasStation = require("./abis/WenGasStationV1.json");
@@ -23,6 +23,7 @@ async function claimAllBlastYieldFromWenTradePool() {
   let gasEstimated;
   let gasLimit;
   let gasPrice;
+  let txHash;
 
   const beforeAdminETHBalance = await web3.eth.getBalance(wallet.address);
   const beforeWenTradePoolETHBalance = await web3.eth.getBalance(
@@ -47,12 +48,17 @@ async function claimAllBlastYieldFromWenTradePool() {
       from: wallet.address,
       gas: gasLimit,
       gasPrice: gasPrice,
+    })
+    .on("transactionHash", function (hash) {
+      txHash = hash;
     });
 
   const afterWenTradePoolETHBalance = await web3.eth.getBalance(
     WenTradePoolAddress
   );
   const afterAdminETHBalance = await web3.eth.getBalance(wallet.address);
+
+  const contractEthBalance = await web3.eth.getBalance(WenTradePoolAddress);
 
   return {
     usedETHForGas: new BN(beforeAdminETHBalance).sub(
@@ -61,6 +67,8 @@ async function claimAllBlastYieldFromWenTradePool() {
     claimedETH: new BN(afterWenTradePoolETHBalance).sub(
       new BN(beforeWenTradePoolETHBalance)
     ),
+    txHash,
+    contractEthBalance: new BN(contractEthBalance),
   };
 }
 
@@ -69,6 +77,7 @@ async function claimAllGasFees() {
   let gasEstimated;
   let gasLimit;
   let gasPrice;
+  let txHash;
 
   const beforeAdminETHBalance = await web3.eth.getBalance(wallet.address);
   const beforeGasStationETHBalance = await web3.eth.getBalance(
@@ -95,6 +104,9 @@ async function claimAllGasFees() {
       from: wallet.address,
       gas: gasLimit,
       gasPrice: gasPrice,
+    })
+    .on("transactionHash", function (hash) {
+      txHash = hash;
     });
 
   const afterGasStationETHBalance = await web3.eth.getBalance(
@@ -109,6 +121,7 @@ async function claimAllGasFees() {
     claimedETH: new BN(afterGasStationETHBalance).sub(
       new BN(beforeGasStationETHBalance)
     ),
+    txHash,
   };
 }
 
@@ -116,6 +129,7 @@ async function distributeGasFees() {
   let gasEstimated;
   let gasLimit;
   let gasPrice;
+  let txHash;
 
   const beforeAdminETHBalance = await web3.eth.getBalance(wallet.address);
   const beforeGasStationETHBalance = await web3.eth.getBalance(
@@ -133,11 +147,16 @@ async function distributeGasFees() {
     .mul(new BN(140))
     .div(new BN(100));
 
-  await WenGasStationContract.methods.distributeFees().send({
-    from: wallet.address,
-    gas: gasLimit,
-    gasPrice: gasPrice,
-  });
+  await WenGasStationContract.methods
+    .distributeFees()
+    .send({
+      from: wallet.address,
+      gas: gasLimit,
+      gasPrice: gasPrice,
+    })
+    .on("transactionHash", function (hash) {
+      txHash = hash;
+    });
 
   const afterGasStationETHBalance = await web3.eth.getBalance(
     WenGasStationAddress
@@ -151,17 +170,20 @@ async function distributeGasFees() {
     distributedETH: new BN(beforeGasStationETHBalance).sub(
       new BN(afterGasStationETHBalance)
     ),
+    txHash,
   };
 }
 
 async function test() {
-  //   let result = await claimAllBlastYieldFromWenTradePool();
-  //   console.log(
-  //     "result: ",
-  //     toEther(result.usedETHForGas).toString(),
-  //     "  & ",
-  //     toEther(result.claimedETH).toString()
-  //   );
+  let result = await claimAllBlastYieldFromWenTradePool();
+  console.log(
+    "result: ",
+    toEther(result.usedETHForGas).toString(),
+    "  & ",
+    toEther(result.claimedETH).toString(),
+    "  hash : ",
+    result.txHash
+  );
 }
 
 async function getBalance(address, tokenAddress) {

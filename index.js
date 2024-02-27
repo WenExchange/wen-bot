@@ -5,6 +5,9 @@ require("dotenv").config();
 const cron = require("node-cron");
 const wen = require("./wen_contract");
 
+const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
+const web3 = createAlchemyWeb3(process.env.TESTNET_RPC_URL);
+
 const TelegramBot = require("node-telegram-bot-api");
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -53,7 +56,6 @@ cron.schedule(
     wen
       .claimAllGasFees()
       .then((object) => {
-        vxSHOSnapshotSuccessJob(object);
         wen
           .distributeGasFees()
           .then((object) => {
@@ -72,24 +74,38 @@ cron.schedule(
   }
 );
 
-function successYield(object) {
-  const currentDate = new Date();
+function getCurrentDateTime() {
+  var options = {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    timeZoneName: "short",
+    weekday: "short",
+  };
+  var date = new Date();
+  options.timeZone = "America/New_York";
+  return date.toLocaleDateString("en-US", options);
+}
+console.log(getCurrentDateTime());
 
+function successYield(object) {
   const msg = `
 
 <b>\n Just Claimed Blast Native Yield!🌾</b> 
 
-<code>Date</code> 
-${currentDate}
-<code>Claimed ETH</code> 
-${object.claimedETH}ETH
-<code>Used Gas</code> 
-${object.usedETHForGas}ETH
-<code>Wen Trade Pool Balance</code> 
- ETH
+✰ <code>Date</code> 
+ ➯${getCurrentDateTime()}
+✰ <code>Claimed ETH</code> 
+ ➯${toEther(object.claimedETH).toString()} ETH
+✰ <code>Used Gas</code> 
+ ➯${toEther(object.usedETHForGas).toString()} ETH
+✰ <code>Wen Trade Pool Balance</code> 
+ ➯${toEther(object.contractEthBalance).toString()} ETH
 
-<a href="https://testnet.blastscan.io/tx/${}">View The TX 🔗</a>
-
+<a href="https://testnet.blastscan.io/tx/${object.txHash}">View The TX 🔗</a>
 
 🔗 Official Links
 <a href="https://wen.exchange">Wen Website</a>  |  <a href="https://twitter.com/wen_exchange">X</a>  |  <a href="https://docs.wen.exchange">Docs</a>
@@ -97,4 +113,8 @@ ${object.usedETHForGas}ETH
 `;
 
   telegramBot.sendMessage(chatId, msg, { parse_mode: "HTML" });
+}
+
+function toEther(num) {
+  return parseFloat(web3.utils.fromWei(num, "ether")).toFixed(18);
 }
